@@ -5,7 +5,9 @@ add_executable(hwapi_tests
     unit/errors_test.cpp
     unit/xml_test.cpp
     unit/transport_test.cpp
-    unit/session_test.cpp)
+    unit/session_test.cpp
+    unit/admin_test.cpp
+    unit/sms_test.cpp)
 target_link_libraries(hwapi_tests
     PRIVATE
         hwapi

@@ -34,7 +34,9 @@ add_library(hwapi STATIC
     lib/errors.cpp
     lib/xml.cpp
     lib/transport.cpp
-    lib/session.cpp)
+    lib/session.cpp
+    lib/api/admin.cpp
+    lib/api/sms.cpp)
 target_include_directories(hwapi PUBLIC include)
 target_link_libraries(hwapi
     PUBLIC
