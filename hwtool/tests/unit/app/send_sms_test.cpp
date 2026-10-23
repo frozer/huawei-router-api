@@ -332,7 +332,7 @@ TEST_CASE_METHOD(SmsFixture, "With --json a sent SMS prints the exact JSON objec
     CHECK(r.err.empty());
 }
 
-TEST_CASE_METHOD(SmsFixture, "--wait reports delivery after one 500 ms sleep", "[send_sms]") {
+TEST_CASE_METHOD(SmsFixture, "Waiting reports delivery after one 500 ms sleep", "[send_sms]") {
     script_login(harness.transport);
     harness.transport.script.push_back(FakeTransport::xml(kOk));
     harness.transport.script.push_back(status(1, 0));
@@ -352,7 +352,7 @@ TEST_CASE_METHOD(SmsFixture, "--wait reports delivery after one 500 ms sleep", "
     CHECK(sleeps[0] == milliseconds(500));
 }
 
-TEST_CASE_METHOD(SmsFixture, "--wait with every number failed exits 6 with status failed",
+TEST_CASE_METHOD(SmsFixture, "Waiting with every number failed exits 6 with status failed",
                  "[send_sms]") {
     script_login(harness.transport);
     harness.transport.script.push_back(FakeTransport::xml(kOk));
@@ -369,7 +369,7 @@ TEST_CASE_METHOD(SmsFixture, "--wait with every number failed exits 6 with statu
                    "\n");
 }
 
-TEST_CASE_METHOD(SmsFixture, "--wait with some numbers failed exits 6 as partial or failed",
+TEST_CASE_METHOD(SmsFixture, "Waiting with some numbers failed exits 6 as partial or failed",
                  "[send_sms]") {
     script_login(harness.transport);
     harness.transport.script.push_back(FakeTransport::xml(kOk));
@@ -393,7 +393,7 @@ TEST_CASE_METHOD(SmsFixture, "--wait with some numbers failed exits 6 as partial
     }
 }
 
-TEST_CASE_METHOD(SmsFixture, "--wait gives up after the timeout with exit 5", "[send_sms]") {
+TEST_CASE_METHOD(SmsFixture, "Waiting gives up after the timeout with exit 5", "[send_sms]") {
     script_login(harness.transport);
     harness.transport.script.push_back(FakeTransport::xml(kOk));
     harness.transport.fallback = status(1, 0);
@@ -431,7 +431,7 @@ TEST_CASE_METHOD(SmsFixture, "Comma and semicolon both separate SucPhone and Fai
     }
 }
 
-TEST_CASE_METHOD(SmsFixture, "--wait delivered with comma-separated SucPhone names every number",
+TEST_CASE_METHOD(SmsFixture, "Waiting delivered with comma-separated SucPhone names every number",
                  "[send_sms]") {
     script_login(harness.transport);
     harness.transport.script.push_back(FakeTransport::xml(kOk));
@@ -445,7 +445,7 @@ TEST_CASE_METHOD(SmsFixture, "--wait delivered with comma-separated SucPhone nam
     CHECK(r.out == "SMS delivered to +1, +2\n");
 }
 
-TEST_CASE_METHOD(SmsFixture, "--json --wait success prints the delivered object", "[send_sms]") {
+TEST_CASE_METHOD(SmsFixture, "JSON with --wait success prints the delivered object", "[send_sms]") {
     script_login(harness.transport);
     harness.transport.script.push_back(FakeTransport::xml(kOk));
     harness.transport.script.push_back(status(1, 1, "+48123456789;"));
