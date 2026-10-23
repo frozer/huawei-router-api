@@ -26,6 +26,9 @@ using TransportFactory = std::function<std::unique_ptr<hw::ITransport>(const Glo
 class Context {
 public:
     Context(GlobalOptions options, Output& output, TransportFactory factory);
+    // Not copyable or movable: the session's log sink captures this.
+    Context(const Context&) = delete;
+    Context& operator=(const Context&) = delete;
 
     const GlobalOptions& options() const noexcept;
     Output& output() noexcept;

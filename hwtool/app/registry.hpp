@@ -28,8 +28,11 @@ public:
     }
 
     // One subcommand per entry, in insertion order; calls configure(sub) on each command.
+    // Replaces any previous attachment, so calling it again does not duplicate subcommands.
     void attach(CLI::App& app);
-    // After parse: the command whose subcommand was given, or nullptr.
+    // After parse: the command whose subcommand was given, or nullptr. The pointer stays valid
+    // only while the registry is alive and the CLI::App passed to attach() is alive; the
+    // registry owns the command, and the subcommand pointers belong to that app.
     Command* selected() const;
 
 private:
@@ -39,9 +42,14 @@ private:
         std::function<std::unique_ptr<Command>()> make;
     };
 
+    // A registered command once attached: its CLI11 subcommand and the owned instance.
+    struct Bound {
+        CLI::App* sub;
+        std::unique_ptr<Command> command;
+    };
+
     std::vector<Entry> entries_;
-    std::vector<std::unique_ptr<Command>> commands_;
-    Command* selected_ = nullptr;
+    std::vector<Bound> bound_;
 };
 
 }  // namespace hwtool

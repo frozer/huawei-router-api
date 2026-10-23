@@ -226,6 +226,36 @@ TEST_CASE_METHOD(CliFixture, "Unknown subcommand or extra positional returns 2 w
     CHECK_FALSE(probe_state.ran);
 }
 
+// Post-red addition: setup failures are reported, not thrown.
+TEST_CASE_METHOD(CliFixture, "Duplicate subcommand names return 1 with a message and do not throw",
+                 "[cli]") {
+    hwtool::CommandRegistry registry;
+    registry.add<ProbeCommand>("probe", "First probe");
+    registry.add<OtherCommand>("probe", "Second probe");
+    std::ostringstream out;
+    std::ostringstream err;
+    std::vector<const char*> argv{"hwtool"};
+    int code = -1;
+
+    CHECK_NOTHROW(code = hwtool::run_cli(1, argv.data(), registry, harness.factory(), out, err));
+    CHECK(code == 1);
+    CHECK_FALSE(err.str().empty());
+}
+
+// Post-red addition: --timeout must be a finite number greater than zero.
+TEST_CASE_METHOD(CliFixture, "Non-finite --timeout values return 2 and the command is not run",
+                 "[cli]") {
+    SECTION("nan") {
+        const RunResult r = run_probe({"--timeout", "nan", "probe"}, harness);
+        CHECK(r.code == 2);
+    }
+    SECTION("inf") {
+        const RunResult r = run_probe({"--timeout", "inf", "probe"}, harness);
+        CHECK(r.code == 2);
+    }
+    CHECK_FALSE(probe_state.ran);
+}
+
 TEST_CASE_METHOD(CliFixture, "Global options have the documented defaults", "[cli]") {
     const RunResult r = run_probe({"probe"}, harness);
 
