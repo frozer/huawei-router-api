@@ -129,6 +129,24 @@ TEST_CASE("XmlRequest keeps building correctly after a move", "[xml]") {
     CHECK(b.str() == xml_doc("<request><X>1</X><Y>2</Y></request>"));
 }
 
+TEST_CASE("XmlRequest throws logic_error on every use after being moved from", "[xml]") {
+    hw::XmlRequest q;
+    q.add("X", "1");
+    hw::XmlRequest p = std::move(q);
+    CHECK_THROWS_AS(q.str(), std::logic_error);
+    CHECK_THROWS_AS(q.add("A", "1"), std::logic_error);
+    CHECK_THROWS_AS(q.add("A", 1LL), std::logic_error);
+    CHECK_THROWS_AS(q.begin("A"), std::logic_error);
+    CHECK_THROWS_AS(q.end(), std::logic_error);
+    CHECK(p.str() == xml_doc("<request><X>1</X></request>"));
+}
+
+TEST_CASE("XmlRequest rejects names and values containing a NUL byte", "[xml]") {
+    CHECK_THROWS_AS(hw::XmlRequest().add("A", std::string_view("a\0b", 3)), std::logic_error);
+    CHECK_THROWS_AS(hw::XmlRequest().add(std::string_view("A\0b", 3), "x"), std::logic_error);
+    CHECK_THROWS_AS(hw::XmlRequest().begin(std::string_view("A\0b", 3)), std::logic_error);
+}
+
 TEST_CASE("XmlResponse parses a pretty-printed Huawei response", "[xml]") {
     const auto response = hw::XmlResponse::parse(
         "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<response>\n<State>-1</State>\n"
@@ -324,6 +342,8 @@ TEST_CASE("XmlResponse::parse rejects malformed input as invalid_xml", "[xml]") 
         "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
         "<!-- c -->",
         "<a/><b/>",
+        std::string_view("<a>x</a>\0<b/>", 13),
+        std::string_view("<a>x</a>\0garbage", 16),
     };
     for (const auto body : bodies) {
         INFO("body: " << body);
