@@ -1,4 +1,8 @@
-add_executable(hwapi_tests unit/version_test.cpp)
+add_executable(hwapi_tests
+    unit/version_test.cpp
+    unit/crypto_test.cpp
+    unit/utf_test.cpp
+    unit/errors_test.cpp)
 target_link_libraries(hwapi_tests
     PRIVATE
         hwapi

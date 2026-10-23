@@ -27,7 +27,11 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     endif()
 endif()
 
-add_library(hwapi STATIC lib/version.cpp)
+add_library(hwapi STATIC
+    lib/version.cpp
+    lib/util/crypto.cpp
+    lib/util/utf.cpp
+    lib/errors.cpp)
 target_include_directories(hwapi PUBLIC include)
 target_link_libraries(hwapi
     PUBLIC
