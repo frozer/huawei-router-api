@@ -770,3 +770,83 @@ TEST_CASE("Log has one line per HTTP request, including token-error retries", "[
                                             "GET api/x -> 200"});
     CHECK(lines.size() == transport.requests.size());
 }
+
+TEST_CASE("A 200 KB meta content value is extracted without crashing", "[session]") {
+    const std::string big(200 * 1024, 'x');
+    FakeTransport transport;
+    transport.script.push_back(FakeTransport::xml(
+        "<html><head><meta name=\"csrf_token\" content=\"" + big + "\"></head></html>"));
+    transport.script.push_back(ok("1"));
+
+    hw::Session session(transport);
+    CHECK(session.get("api/x").root().text("v") == "1");
+
+    REQUIRE(transport.requests.size() == 2);
+    CHECK(token_of(transport.requests[1]) == big);
+    CHECK(tokens_of(session) == std::vector<std::string>{big});
+}
+
+TEST_CASE("A 200 KB junk attribute before name and content is skipped", "[session]") {
+    const std::string junk(200 * 1024, 'j');
+    FakeTransport transport;
+    transport.script.push_back(FakeTransport::xml(
+        "<html><head><meta data-junk=\"" + junk +
+        "\" name=\"csrf_token\" content=\"tok\"></head></html>"));
+    transport.script.push_back(ok("1"));
+
+    hw::Session session(transport);
+    CHECK(session.get("api/x").root().text("v") == "1");
+
+    REQUIRE(transport.requests.size() == 2);
+    CHECK(token_of(transport.requests[1]) == "tok");
+    CHECK(tokens_of(session) == std::vector<std::string>{"tok"});
+}
+
+TEST_CASE("Meta tag and attribute names are matched case-insensitively", "[session]") {
+    FakeTransport transport;
+    transport.script.push_back(FakeTransport::xml(
+        "<HTML><HEAD><META NAME=\"csrf_token\" CONTENT=\"u\"></HEAD></HTML>"));
+    transport.script.push_back(ok("1"));
+
+    hw::Session session(transport);
+    CHECK(session.get("api/x").root().text("v") == "1");
+
+    REQUIRE(transport.requests.size() == 2);
+    CHECK(token_of(transport.requests[1]) == "u");
+    CHECK(tokens_of(session) == std::vector<std::string>{"u"});
+}
+
+TEST_CASE("Unterminated meta tag yields no token and falls back to api/webserver/token",
+          "[session]") {
+    const std::string fallback(32, 'F');
+    FakeTransport transport;
+    transport.script.push_back(FakeTransport::xml(
+        "<html><head><meta name=\"csrf_token\" content=\"z\""));
+    transport.script.push_back(FakeTransport::xml("<response><token>" + fallback +
+                                                  "</token></response>"));
+    transport.script.push_back(ok("1"));
+
+    hw::Session session(transport);
+    CHECK(session.get("api/x").root().text("v") == "1");
+
+    REQUIRE(transport.requests.size() == 3);
+    CHECK(transport.requests[1].path == "api/webserver/token");
+    CHECK(token_of(transport.requests[2]) == fallback);
+    CHECK(tokens_of(session) == std::vector<std::string>{fallback});
+}
+
+TEST_CASE("Post with an invalid XML body still appends rotation tokens", "[session]") {
+    FakeTransport transport;
+    transport.script.push_back(FakeTransport::home_page({"a", "b"}));
+    transport.script.push_back(
+        FakeTransport::xml("garbage", hw::Headers{{"__RequestVerificationToken", "n"}}));
+
+    hw::Session session(transport);
+    const auto error = thrown<hw::RequestError>(
+        [&] { session.post("api/set", sample_body()); });
+
+    REQUIRE(error.has_value());
+    CHECK(error->code() == "http_request_invalid_xml");
+    CHECK(transport.requests.size() == 2);
+    CHECK(tokens_of(session) == std::vector<std::string>{"b", "n"});
+}

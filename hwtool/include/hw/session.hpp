@@ -27,6 +27,14 @@ public:
     const std::deque<std::string>& tokens() const noexcept;
 
 private:
+    HttpResponse send_logged(const HttpRequest& request);
+    XmlResponse get_once(std::string_view path);
+    XmlResponse post_once(std::string_view path, const std::string& payload, Expect expect);
+    XmlResponse finish_post(std::string_view path, const HttpResponse& http, Expect expect);
+    std::deque<std::string> fetch_tokens();
+    void ensure_tokens();
+    void append_rotated(const Headers& headers);
+
     ITransport& transport_;
     LogSink log_;
     std::deque<std::string> tokens_;
