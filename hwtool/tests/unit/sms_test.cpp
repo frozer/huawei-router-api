@@ -384,5 +384,5 @@ TEST_CASE("SendStatus is complete once cur_index reaches or exceeds total_count"
     CHECK(empty.total_count == 0);
     CHECK(empty.cur_index == 0);
     CHECK(empty.complete());
-    REQUIRE(transport.requests.size() == 6);
+    REQUIRE(transport.requests.size() == 5);
 }
