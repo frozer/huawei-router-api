@@ -1,21 +1,28 @@
-#include <CLI/CLI.hpp>
-
+#include <algorithm>
+#include <chrono>
+#include <cmath>
 #include <iostream>
-#include <string>
+#include <memory>
 
-#include "hw/version.hpp"
+#include "cli.hpp"
+#include "commands/send_sms.hpp"
+#include "context.hpp"
+#include "hw/curl_transport.hpp"
+#include "hw/transport.hpp"
+#include "registry.hpp"
 
 int main(int argc, char** argv) {
-    CLI::App app{"Command-line tool for Huawei LTE routers", "hwtool"};
+    hwtool::CommandRegistry registry;
+    registry.add<hwtool::SendSmsCommand>("send-sms", "Send an SMS message");
 
-    app.set_version_flag("--version", std::string("hwtool ") + std::string(hw::version()));
-    app.require_subcommand(0, 1);
+    hwtool::TransportFactory factory =
+        [](const hwtool::GlobalOptions& options) -> std::unique_ptr<hw::ITransport> {
+        using Millis = std::chrono::milliseconds;
+        // Cap at one year before converting, so huge --timeout values cannot overflow llround.
+        const double capped = std::min(options.timeout * 1000.0, 86400000.0 * 365);
+        const auto millis = static_cast<Millis::rep>(std::llround(capped));
+        return std::make_unique<hw::CurlTransport>(options.url, Millis(millis));
+    };
 
-    if (argc < 2) {
-        std::cout << app.help();
-        return 0;
-    }
-
-    CLI11_PARSE(app, argc, argv);
-    return 0;
+    return hwtool::run_cli(argc, argv, registry, std::move(factory), std::cout, std::cerr);
 }

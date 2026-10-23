@@ -2,8 +2,6 @@
 
 #include <CLI/CLI.hpp>
 
-#include <cmath>
-#include <cstddef>
 #include <exception>
 #include <ostream>
 #include <string>
@@ -12,29 +10,9 @@
 #include "exit_codes.hpp"
 #include "hw/version.hpp"
 #include "output.hpp"
+#include "validators.hpp"
 
 namespace hwtool {
-
-namespace {
-
-// Accepts only finite numbers greater than zero. CLI::PositiveNumber alone lets nan through.
-const CLI::Validator finite_positive{
-    [](std::string& input) -> std::string {
-        std::size_t used = 0;
-        double value = 0.0;
-        try {
-            value = std::stod(input, &used);
-        } catch (const std::exception&) {
-            return "must be a number greater than 0";
-        }
-        if (used != input.size() || !std::isfinite(value) || value <= 0.0) {
-            return "must be a finite number greater than 0";
-        }
-        return "";
-    },
-    "FINITE_POSITIVE"};
-
-}  // namespace
 
 int run_cli(int argc, const char* const* argv, CommandRegistry& registry, TransportFactory factory,
             std::ostream& out, std::ostream& err) {
@@ -49,7 +27,7 @@ int run_cli(int argc, const char* const* argv, CommandRegistry& registry, Transp
         app.add_option("-p,--password", options.password, "Router password")
             ->envname("HWTOOL_PASSWORD");
         app.add_option("--timeout", options.timeout, "Request timeout in seconds (> 0)")
-            ->check(finite_positive)
+            ->check(finite_positive())
             ->capture_default_str();
         app.add_flag("-v,--verbose", options.verbose, "Log HTTP requests to stderr");
         app.add_flag("--json", options.json, "Print results as JSON");
