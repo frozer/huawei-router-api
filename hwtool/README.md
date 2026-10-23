@@ -5,12 +5,12 @@ sends SMS messages, optionally waiting for the router to report delivery.
 
 ## Requirements
 
-- CMake 3.20 or newer, Ninja (or another CMake generator), git (CMake fetches dependencies)
-- A C++20 compiler (GCC 10+ or Clang 12+)
-- libcurl development headers (7.85 or newer for the protocol restriction)
-- Python 3 (only for the end-to-end tests)
+- CMake 3.16 or newer, Ninja (or another CMake generator), git (CMake fetches dependencies)
+- A C++20 compiler (GCC 9+ or Clang 12+)
+- libcurl development headers (7.68 or newer)
+- Python 3.8 or newer (only for the end-to-end tests)
 
-On Debian/Ubuntu:
+On Debian/Ubuntu (the stock packages of Ubuntu 20.04 and later are sufficient):
 
 ```sh
 sudo apt install build-essential cmake ninja-build git libcurl4-openssl-dev python3
@@ -23,7 +23,7 @@ pugixml, CLI11 and Catch2 are downloaded by CMake at configure time.
 ```sh
 cmake -S hwtool -B hwtool/build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DHWTOOL_WERROR=ON
 cmake --build hwtool/build
-ctest --test-dir hwtool/build --output-on-failure
+(cd hwtool/build && ctest --output-on-failure)
 ```
 
 Build options: `HWTOOL_BUILD_TESTS` (default ON) builds the tests, `HWTOOL_WERROR` (default OFF)
