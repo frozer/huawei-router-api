@@ -32,7 +32,9 @@ add_library(hwapi STATIC
     lib/util/crypto.cpp
     lib/util/utf.cpp
     lib/errors.cpp
-    lib/xml.cpp)
+    lib/xml.cpp
+    lib/transport.cpp
+    lib/session.cpp)
 target_include_directories(hwapi PUBLIC include)
 target_link_libraries(hwapi
     PUBLIC
