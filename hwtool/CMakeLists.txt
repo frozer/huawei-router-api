@@ -45,12 +45,24 @@ target_link_libraries(hwapi
 target_compile_definitions(hwapi PRIVATE HWTOOL_VERSION="${PROJECT_VERSION}")
 target_link_libraries(hwapi PRIVATE hwtool_warnings)
 
+add_library(hwtool_app STATIC
+    app/output.cpp
+    app/exit_codes.cpp
+    app/context.cpp
+    app/registry.cpp
+    app/cli.cpp)
+target_include_directories(hwtool_app PUBLIC app)
+target_link_libraries(hwtool_app
+    PUBLIC
+        hwapi
+        CLI11::CLI11)
+target_link_libraries(hwtool_app PRIVATE hwtool_warnings)
+
 add_executable(hwtool app/main.cpp)
 target_include_directories(hwtool PRIVATE app)
 target_link_libraries(hwtool
     PRIVATE
-        hwapi
-        CLI11::CLI11
+        hwtool_app
         hwtool_warnings)
 
 if(HWTOOL_STATIC)

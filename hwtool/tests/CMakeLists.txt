@@ -18,6 +18,18 @@ target_include_directories(hwapi_tests PRIVATE unit)
 include(Catch)
 catch_discover_tests(hwapi_tests)
 
+add_executable(hwtool_app_tests
+    unit/app/output_test.cpp
+    unit/app/exit_codes_test.cpp
+    unit/app/cli_test.cpp)
+target_link_libraries(hwtool_app_tests
+    PRIVATE
+        hwtool_app
+        Catch2::Catch2WithMain
+        hwtool_warnings)
+target_include_directories(hwtool_app_tests PRIVATE unit)
+catch_discover_tests(hwtool_app_tests)
+
 add_test(NAME cli_version COMMAND hwtool --version)
 set_tests_properties(cli_version PROPERTIES
     PASS_REGULAR_EXPRESSION "hwtool 0\\.1\\.0")
