@@ -34,6 +34,7 @@ add_library(hwapi STATIC
     lib/errors.cpp
     lib/xml.cpp
     lib/transport.cpp
+    lib/curl_transport.cpp
     lib/session.cpp
     lib/api/admin.cpp
     lib/api/sms.cpp)
@@ -50,7 +51,8 @@ add_library(hwtool_app STATIC
     app/exit_codes.cpp
     app/context.cpp
     app/registry.cpp
-    app/cli.cpp)
+    app/cli.cpp
+    app/commands/send_sms.cpp)
 target_include_directories(hwtool_app PUBLIC app)
 target_link_libraries(hwtool_app
     PUBLIC

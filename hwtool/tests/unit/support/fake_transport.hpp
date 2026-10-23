@@ -1,6 +1,7 @@
 #pragma once
 
 #include <deque>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -11,15 +12,20 @@
 #include "hw/transport.hpp"
 
 // Scripted transport for tests. Each send() pops the next scripted entry: a response is returned,
-// a RequestError is thrown. Every request is recorded in `requests`.
+// a RequestError is thrown. Every request is recorded in `requests`. When the script is empty and
+// `fallback` is set, that response is returned for every further request.
 class FakeTransport : public hw::ITransport {
 public:
     std::deque<std::variant<hw::HttpResponse, hw::RequestError>> script;
+    std::optional<hw::HttpResponse> fallback;
     std::vector<hw::HttpRequest> requests;
 
     hw::HttpResponse send(const hw::HttpRequest& request) override {
         requests.push_back(request);
         if (script.empty()) {
+            if (fallback) {
+                return *fallback;
+            }
             throw std::logic_error("unexpected request: " + request.path);
         }
         auto entry = std::move(script.front());

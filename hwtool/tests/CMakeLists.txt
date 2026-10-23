@@ -21,7 +21,8 @@ catch_discover_tests(hwapi_tests)
 add_executable(hwtool_app_tests
     unit/app/output_test.cpp
     unit/app/exit_codes_test.cpp
-    unit/app/cli_test.cpp)
+    unit/app/cli_test.cpp
+    unit/app/send_sms_test.cpp)
 target_link_libraries(hwtool_app_tests
     PRIVATE
         hwtool_app
@@ -29,6 +30,15 @@ target_link_libraries(hwtool_app_tests
         hwtool_warnings)
 target_include_directories(hwtool_app_tests PRIVATE unit)
 catch_discover_tests(hwtool_app_tests)
+
+find_package(Python3 COMPONENTS Interpreter)
+if(Python3_Interpreter_FOUND)
+    add_test(NAME e2e_cli
+        COMMAND Python3::Interpreter -I ${CMAKE_CURRENT_SOURCE_DIR}/e2e/test_cli.py)
+    set_tests_properties(e2e_cli PROPERTIES
+        ENVIRONMENT "HWTOOL_BIN=$<TARGET_FILE:hwtool>"
+        TIMEOUT 120)
+endif()
 
 add_test(NAME cli_version COMMAND hwtool --version)
 set_tests_properties(cli_version PROPERTIES
