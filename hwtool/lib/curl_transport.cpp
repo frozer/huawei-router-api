@@ -147,6 +147,15 @@ bool is_no_response(CURLcode code) {
     }
 }
 
+#if LIBCURL_VERSION_NUM >= 0x075500
+// The protocols requests and redirects may use. An HTTP-only libcurl (built without TLS, as
+// for OpenWrt) rejects a list that names https, so https is listed only when curl supports it.
+const char* allowed_protocols() {
+    const curl_version_info_data* info = curl_version_info(CURLVERSION_NOW);
+    return (info->features & CURL_VERSION_SSL) != 0 ? "http,https" : "http";
+}
+#endif
+
 RequestError transport_error(CURLcode code) {
     if (code == CURLE_OPERATION_TIMEDOUT) {
         return RequestError("timeout", "HTTP request timed out");
@@ -192,8 +201,8 @@ CurlTransport::CurlTransport(std::string base_url, std::chrono::milliseconds tim
     check(curl_easy_setopt(handle, CURLOPT_NOSIGNAL, 1L));
     // CURLOPT_PROTOCOLS_STR is an enum value, so the version macro decides (7.85.0 introduced it).
 #if LIBCURL_VERSION_NUM >= 0x075500
-    check(curl_easy_setopt(handle, CURLOPT_PROTOCOLS_STR, "http,https"));
-    check(curl_easy_setopt(handle, CURLOPT_REDIR_PROTOCOLS_STR, "http,https"));
+    check(curl_easy_setopt(handle, CURLOPT_PROTOCOLS_STR, allowed_protocols()));
+    check(curl_easy_setopt(handle, CURLOPT_REDIR_PROTOCOLS_STR, allowed_protocols()));
 #else
     check(curl_easy_setopt(handle, CURLOPT_PROTOCOLS, CURLPROTO_HTTP | CURLPROTO_HTTPS));
     check(curl_easy_setopt(handle, CURLOPT_REDIR_PROTOCOLS, CURLPROTO_HTTP | CURLPROTO_HTTPS));
