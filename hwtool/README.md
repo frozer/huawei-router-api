@@ -29,6 +29,34 @@ cmake --build hwtool/build
 Build options: `HWTOOL_BUILD_TESTS` (default ON) builds the tests, `HWTOOL_WERROR` (default OFF)
 turns warnings into errors, and `HWTOOL_STATIC` (default OFF) links libstdc++ and libgcc statically.
 
+## OpenWrt / MIPS
+
+`packaging/openwrt/build.sh` builds a fully static binary for little-endian MIPS OpenWrt devices
+(the ramips target: RT288x, RT305x, MT7620, MT7621). It works on old releases such as
+14.07 Barrier Breaker with kernel 3.10, whose own SDK (GCC 4.8) cannot compile C++20. The script
+needs only Docker:
+
+```sh
+hwtool/packaging/openwrt/build.sh
+```
+
+It builds a GCC + musl cross toolchain (soft-float MIPS32) and an HTTP-only libcurl in an image,
+which takes a while the first time and is cached afterwards. It then cross-compiles hwtool, runs
+the tests under `qemu-mipsel`, and writes `build/dist/hwtool-<version>-openwrt-ramips-mipsel`
+with a `.sha256` file. You can use the toolchain file `cmake/toolchains/mipsel-openwrt.cmake`
+directly inside that image.
+
+On the device, `opkg print-architecture` should list a `ramips_*` (mipsel) architecture. Copy
+the binary over with ssh, since old dropbear builds often have no scp:
+
+```sh
+ssh root@192.168.1.1 'cat > /tmp/hwtool && chmod +x /tmp/hwtool' < hwtool/build/dist/hwtool-0.1.0-openwrt-ramips-mipsel
+ssh root@192.168.1.1 '/tmp/hwtool --version'
+```
+
+`/tmp` is RAM on OpenWrt and is cleared on reboot. Copy the binary to `/usr/bin` to keep it. The MIPS
+build supports `http://` router URLs only (no TLS).
+
 ## Usage
 
 ```sh

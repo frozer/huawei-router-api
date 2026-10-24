@@ -3,6 +3,7 @@
 import json
 import os
 import re
+import shlex
 import socket
 import subprocess
 import sys
@@ -26,6 +27,8 @@ class HwtoolTestCase(unittest.TestCase):
     def setUp(self):
         self.binary = os.environ.get("HWTOOL_BIN", "")
         self.assertTrue(self.binary, "HWTOOL_BIN must name the hwtool binary")
+        # Set when cross-compiling, e.g. "qemu-mipsel", so the binary runs on the build host.
+        self.emulator = shlex.split(os.environ.get("HWTOOL_EMULATOR", ""))
         self.router = FakeRouter()
         self.router.start()
         self.addCleanup(self.router.stop)
@@ -40,7 +43,7 @@ class HwtoolTestCase(unittest.TestCase):
         clean_env["no_proxy"] = "127.0.0.1"
         if env:
             clean_env.update(env)
-        argv = [self.binary, "--url", url or self.router.url, *args]
+        argv = [*self.emulator, self.binary, "--url", url or self.router.url, *args]
         return subprocess.run(argv, capture_output=True, text=True, encoding="utf-8",
                               env=clean_env, timeout=timeout)
 

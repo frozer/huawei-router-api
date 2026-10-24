@@ -34,10 +34,14 @@ catch_discover_tests(hwtool_app_tests)
 find_package(Python3 COMPONENTS Interpreter)
 if(Python3_Interpreter_FOUND)
     add_test(NAME e2e_cli
-        COMMAND Python3::Interpreter -I ${CMAKE_CURRENT_SOURCE_DIR}/e2e/test_cli.py)
+        COMMAND ${Python3_EXECUTABLE} -I ${CMAKE_CURRENT_SOURCE_DIR}/e2e/test_cli.py)
     set_tests_properties(e2e_cli PROPERTIES
         ENVIRONMENT "HWTOOL_BIN=$<TARGET_FILE:hwtool>"
         TIMEOUT 120)
+    if(CMAKE_CROSSCOMPILING_EMULATOR)
+        list(JOIN CMAKE_CROSSCOMPILING_EMULATOR " " emulator)
+        set_property(TEST e2e_cli APPEND PROPERTY ENVIRONMENT "HWTOOL_EMULATOR=${emulator}")
+    endif()
 endif()
 
 add_test(NAME cli_version COMMAND hwtool --version)
