@@ -1,0 +1,49 @@
+add_executable(hwapi_tests
+    unit/version_test.cpp
+    unit/crypto_test.cpp
+    unit/utf_test.cpp
+    unit/errors_test.cpp
+    unit/xml_test.cpp
+    unit/transport_test.cpp
+    unit/session_test.cpp
+    unit/admin_test.cpp
+    unit/sms_test.cpp)
+target_link_libraries(hwapi_tests
+    PRIVATE
+        hwapi
+        Catch2::Catch2WithMain
+        hwtool_warnings)
+target_include_directories(hwapi_tests PRIVATE unit)
+
+include(Catch)
+catch_discover_tests(hwapi_tests)
+
+add_executable(hwtool_app_tests
+    unit/app/output_test.cpp
+    unit/app/exit_codes_test.cpp
+    unit/app/cli_test.cpp
+    unit/app/send_sms_test.cpp)
+target_link_libraries(hwtool_app_tests
+    PRIVATE
+        hwtool_app
+        Catch2::Catch2WithMain
+        hwtool_warnings)
+target_include_directories(hwtool_app_tests PRIVATE unit)
+catch_discover_tests(hwtool_app_tests)
+
+find_package(Python3 COMPONENTS Interpreter)
+if(Python3_Interpreter_FOUND)
+    add_test(NAME e2e_cli
+        COMMAND ${Python3_EXECUTABLE} -I ${CMAKE_CURRENT_SOURCE_DIR}/e2e/test_cli.py)
+    set_tests_properties(e2e_cli PROPERTIES
+        ENVIRONMENT "HWTOOL_BIN=$<TARGET_FILE:hwtool>"
+        TIMEOUT 120)
+    if(CMAKE_CROSSCOMPILING_EMULATOR)
+        list(JOIN CMAKE_CROSSCOMPILING_EMULATOR " " emulator)
+        set_property(TEST e2e_cli APPEND PROPERTY ENVIRONMENT "HWTOOL_EMULATOR=${emulator}")
+    endif()
+endif()
+
+add_test(NAME cli_version COMMAND hwtool --version)
+set_tests_properties(cli_version PROPERTIES
+    PASS_REGULAR_EXPRESSION "hwtool 0\\.1\\.0")
